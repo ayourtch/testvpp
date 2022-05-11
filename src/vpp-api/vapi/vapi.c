@@ -303,11 +303,9 @@ vapi_is_msg_available (vapi_ctx_t ctx, vapi_msg_id_t id)
 }
 
 vapi_error_e
-vapi_connect (vapi_ctx_t ctx, const char *name,
-	      const char *chroot_prefix,
-	      int max_outstanding_requests,
-	      int response_queue_size, vapi_mode_e mode,
-	      bool handle_keepalives)
+vapi_connect (vapi_ctx_t ctx, const char *name, const char *chroot_prefix,
+	      int max_outstanding_requests, int response_queue_size,
+	      vapi_mode_e mode, bool handle_keepalives)
 {
   if (response_queue_size <= 0 || max_outstanding_requests <= 0)
     {
@@ -317,6 +315,7 @@ vapi_connect (vapi_ctx_t ctx, const char *name,
     {
       return VAPI_ENOMEM;
     }
+
   ctx->requests_size = max_outstanding_requests;
   const size_t size = ctx->requests_size * sizeof (*ctx->requests);
   void *tmp = realloc (ctx->requests, size);
@@ -328,6 +327,7 @@ vapi_connect (vapi_ctx_t ctx, const char *name,
   clib_memset (ctx->requests, 0, size);
   /* coverity[MISSING_LOCK] - 177211 requests_mutex is not needed here */
   ctx->requests_start = ctx->requests_count = 0;
+
   if (chroot_prefix)
     {
       VAPI_DBG ("set memory root path `%s'", chroot_prefix);
@@ -367,10 +367,9 @@ vapi_connect (vapi_ctx_t ctx, const char *name,
 	    }
 	  if (id > ctx->vl_msg_id_max)
 	    {
-	      vapi_msg_id_t *tmp = realloc (ctx->vl_msg_id_to_vapi_msg_t,
-					    sizeof
-					    (*ctx->vl_msg_id_to_vapi_msg_t) *
-					    (id + 1));
+	      vapi_msg_id_t *tmp =
+		realloc (ctx->vl_msg_id_to_vapi_msg_t,
+			 sizeof (*ctx->vl_msg_id_to_vapi_msg_t) * (id + 1));
 	      if (!tmp)
 		{
 		  rv = VAPI_ENOMEM;
@@ -398,8 +397,8 @@ vapi_connect (vapi_ctx_t ctx, const char *name,
   if (!vapi_is_msg_available (ctx, vapi_msg_id_control_ping) ||
       !vapi_is_msg_available (ctx, vapi_msg_id_control_ping_reply))
     {
-      VAPI_ERR
-	("control ping or control ping reply not available, cannot connect");
+      VAPI_ERR (
+	"control ping or control ping reply not available, cannot connect");
       rv = VAPI_EINCOMPATIBLE;
       goto fail;
     }
@@ -689,9 +688,8 @@ vapi_dispatch_response (vapi_ctx_t ctx, vapi_msg_id_t id,
 	}
       if (payload_offset != -1)
 	{
-	  rv =
-	    ctx->requests[tmp].callback (ctx, ctx->requests[tmp].callback_ctx,
-					 VAPI_OK, is_last, payload);
+	  rv = ctx->requests[tmp].callback (
+	    ctx, ctx->requests[tmp].callback_ctx, VAPI_OK, is_last, payload);
 	}
       else
 	{
